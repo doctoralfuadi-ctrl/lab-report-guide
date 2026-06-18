@@ -1,0 +1,98 @@
+{
+  "theme": "LIGHT",
+  "archetype": "Medical Trust + Clinical Precision (Hybrid)",
+  "color_palette": {
+    "background": "#FDFBF6",
+    "turquoise": {
+      "50": "#E6F5F6",
+      "100": "#C2EAEC",
+      "300": "#61C5C7",
+      "500": "#0D9FA3",
+      "700": "#085B5E",
+      "900": "#043335"
+    },
+    "pomegranate": {
+      "50": "#FBEEF0",
+      "100": "#F7DCDA",
+      "300": "#CC6E7C",
+      "500": "#A93D4F",
+      "700": "#8B1E2E",
+      "900": "#4B0E17"
+    },
+    "clinical_blue": {
+      "50": "#E0F7FA",
+      "100": "#B2EBF2",
+      "300": "#4DD0E1",
+      "500": "#00BCD4",
+      "700": "#0097A7",
+      "900": "#006064"
+    },
+    "flags": {
+      "critical_high": "#8B1E2E",
+      "abnormal_high": "#A93D4F",
+      "normal": "#0D9FA3",
+      "abnormal_low": "#0097A7",
+      "critical_low": "#006064"
+    }
+  },
+  "typography": {
+    "headings": {
+      "family": "Outfit, sans-serif",
+      "weights": ["400", "500", "700"],
+      "usage": "Hero headers, section titles, card headers."
+    },
+    "body": {
+      "family": "IBM Plex Sans, sans-serif",
+      "weights": ["400", "500", "600"],
+      "usage": "Data tables, chart labels, body text. Excellent tabular numerals."
+    },
+    "utilities": {
+      "tabular_nums": "Always apply `tabular-nums` class to tables, KPI values, and charts."
+    }
+  },
+  "material_treatments": {
+    "glass_card_1": "bg-white/60 backdrop-blur-xl border border-white/80 shadow-[0_8px_32px_rgba(13,159,163,0.06)]",
+    "glass_card_2": "bg-white/75 backdrop-blur-2xl border border-white shadow-[0_16px_48px_rgba(13,159,163,0.1)]",
+    "glow_pomegranate": "absolute -inset-0.5 bg-pomegranate-500/15 blur-2xl rounded-3xl z-[-1]",
+    "glow_cyan": "absolute -inset-0.5 bg-clinical_blue-500/15 blur-2xl rounded-3xl z-[-1]",
+    "grain_overlay": "opacity-30 mix-blend-overlay pointer-events-none"
+  },
+  "components": {
+    "hero": {
+      "layout": "Overlapping crystalline panels on `#FDFBF6`. Soft radial glows of cyan and pomegranate in the background.",
+      "text": "Outfit font, `text-5xl` tracking-tight, clinical_blue to turquoise gradient text clip."
+    },
+    "pricing_cards": {
+      "base": "Use glass_card_1. On hover, translate-y-1, switch to glass_card_2, and animate a subtle glow behind it.",
+      "premium_tier": "Add glowing cyan border ring."
+    },
+    "clinical_dashboard": {
+      "layout": "Grid-based Control Room. `grid-cols-1 md:grid-cols-12 gap-6`.",
+      "kpi_sparklines": "col-span-12 md:col-span-4 lg:col-span-3. Use raw SVG for sparklines (lightweight). Include % change, tabular-num.",
+      "main_chart": "col-span-12 lg:col-span-9. Multi-series line chart.",
+      "chart_library": "Recharts. Use `<ReferenceArea>` for normal ranges (filled with turquoise-50/40).",
+      "abnormality_heatmap": "Grid of small rounded squares (github style) showing test frequency/abnormalities. Use Pomegranate for critical, Cyan for normal.",
+      "density_toggle": "Tabs component to switch between Patient (high padding, explanations) and Specialist (dense tables, p-2 padding)."
+    }
+  },
+  "motion_specs": {
+    "hover": "transition-all duration-300 ease-out",
+    "page_load": "staggered fade-up (`framer-motion`), initial opacity 0, y 20, duration 0.5s",
+    "chart_enter": "draw-line animation for paths"
+  },
+  "rtl_adaptation": {
+    "logical_properties": "Use `ps-`, `pe-`, `ms-`, `me-`, `border-s-` exclusively over left/right utilities.",
+    "icons": "Use `rtl:-scale-x-100` for directional icons (chevrons, arrows) from lucide-react.",
+    "dir_attribute": "Wrap main app in `<div dir=\"rtl\">` for Arabic, `<div dir=\"ltr\">` for English."
+  },
+  "testing": {
+    "requirements": "All interactive elements must have `data-testid=\"role-purpose\"` (e.g., `data-testid=\"export-pdf-btn\"`)."
+  },
+  "implementation_directives": {
+    "tailwind_config": {
+      "colors": "Add turquoise, pomegranate, and clinical_blue exactly as defined.",
+      "fontFamily": "outfit: ['Outfit', 'sans-serif'], ibm: ['IBM Plex Sans', 'sans-serif']"
+    },
+    "css": "Define `.glass-card-1`, `.glass-card-2`, `.glow-cyan`, `.glow-pomegranate` in index.css using `@apply`."
+  }
+}
