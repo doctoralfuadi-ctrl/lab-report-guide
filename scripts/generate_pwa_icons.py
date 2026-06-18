@@ -1,1 +1,111 @@
-"""Generate PWA icons for MidScope (Crystalline Pomegranate).\n\nCreates:\n- icon-192.png\n- icon-512.png\n- icon-maskable-512.png\n- apple-touch-icon.png\n- favicon.ico\n\nBrand (Crystalline Pomegranate):\n- Primary gradient: pomegranate red (#A93D4F -> #5C111C)\n- Crystalline highlight: white@70 top-left, pearl-cyan@10 bottom-right\n- Mark: stylized heart-pulse line in pearly white with subtle cyan dot accent\n"""\nfrom PIL import Image, ImageDraw\nimport os\n\nOUT = \"/app/frontend/public\"\nos.makedirs(OUT, exist_ok=True)\n\nPOM_TOP = (169, 61, 79)\nPOM_BOT = (92, 17, 28)\nPEARL_CYAN = (180, 235, 242)\nWHITE = (255, 255, 255)\n\n\ndef _vertical_gradient(size, top, bottom):\n    img = Image.new(\"RGB\", (size, size), top)\n    draw = ImageDraw.Draw(img)\n    for y in range(size):\n        t = y / max(1, size - 1)\n        r = int(top[0] * (1 - t) + bottom[0] * t)\n        g = int(top[1] * (1 - t) + bottom[1] * t)\n        b = int(top[2] * (1 - t) + bottom[2] * t)\n        draw.line([(0, y), (size, y)], fill=(r, g, b))\n    return img\n\n\ndef _add_crystalline_highlight(canvas, size):\n    overlay = Image.new(\"RGBA\", (size, size), (0, 0, 0, 0))\n    od = ImageDraw.Draw(overlay)\n    od.polygon([(0, 0), (size, 0), (size, int(size * 0.18)), (int(size * 0.6), int(size * 0.45)), (0, int(size * 0.55))], fill=(255, 255, 255, 38))\n    od.polygon([(size, size), (size, int(size * 0.45)), (int(size * 0.55), size)], fill=(PEARL_CYAN[0], PEARL_CYAN[1], PEARL_CYAN[2], 32))\n    canvas.alpha_composite(overlay)\n\n\ndef _rounded_mask(size, radius_ratio=0.22):\n    mask = Image.new(\"L\", (size, size), 0)\n    d = ImageDraw.Draw(mask)\n    r = int(size * radius_ratio)\n    d.rounded_rectangle([(0, 0), (size, size)], radius=r, fill=255)\n    return mask\n\n\ndef _draw_logo(canvas, size, full_bleed=False):\n    draw = ImageDraw.Draw(canvas, \"RGBA\")\n    margin = int(size * 0.10) if full_bleed else int(size * 0.04)\n    inner = size - 2 * margin\n    cx = size // 2\n    cy = size // 2\n    line_w = max(2, int(inner * 0.085))\n    span = int(inner * 0.78)\n    left = cx - span // 2\n    right = cx + span // 2\n    amp = int(inner * 0.22)\n    p1 = (left, cy)\n    p2 = (cx - amp, cy)\n    p3 = (cx - amp // 2, cy - amp)\n    p4 = (cx, cy + amp)\n    p5 = (cx + amp // 2, cy - int(amp * 1.2))\n    p6 = (cx + amp, cy)\n    p7 = (right, cy)\n    points = [p1, p2, p3, p4, p5, p6, p7]\n    draw.line([(x + 2, y + 3) for (x, y) in points], fill=(0, 0, 0, 90), width=line_w, joint=\"curve\")\n    draw.line(points, fill=WHITE, width=line_w, joint=\"curve\")\n    dot_r = max(3, int(inner * 0.055))\n    draw.ellipse([(p5[0] - dot_r, p5[1] - dot_r), (p5[0] + dot_r, p5[1] + dot_r)], fill=PEARL_CYAN, outline=WHITE, width=max(1, line_w // 4))\n\n\ndef make_standard(size, path):\n    bg = _vertical_gradient(size, POM_TOP, POM_BOT)\n    canvas = Image.new(\"RGBA\", (size, size), (0, 0, 0, 0))\n    canvas.paste(bg, (0, 0))\n    _add_crystalline_highlight(canvas, size)\n    _draw_logo(canvas, size, full_bleed=False)\n    mask = _rounded_mask(size, 0.22)\n    out = Image.new(\"RGBA\", (size, size), (0, 0, 0, 0))\n    out.paste(canvas, (0, 0), mask)\n    out.save(path, \"PNG\", optimize=True)\n\n\ndef make_maskable(size, path):\n    bg = _vertical_gradient(size, POM_TOP, POM_BOT)\n    canvas = Image.new(\"RGBA\", (size, size), (0, 0, 0, 0))\n    canvas.paste(bg, (0, 0))\n    _add_crystalline_highlight(canvas, size)\n    _draw_logo(canvas, size, full_bleed=True)\n    canvas.save(path, \"PNG\", optimize=True)\n\n\ndef make_apple(size, path):\n    bg = _vertical_gradient(size, POM_TOP, POM_BOT)\n    canvas = Image.new(\"RGB\", (size, size), POM_TOP)\n    canvas.paste(bg, (0, 0))\n    rgba = canvas.convert(\"RGBA\")\n    _add_crystalline_highlight(rgba, size)\n    _draw_logo(rgba, size, full_bleed=False)\n    rgba.convert(\"RGB\").save(path, \"PNG\", optimize=True)\n\n\ndef make_favicon(path):\n    sizes = [16, 32, 48, 64]\n    imgs = []\n    for s in sizes:\n        bg = _vertical_gradient(s, POM_TOP, POM_BOT)\n        canvas = Image.new(\"RGBA\", (s, s), (0, 0, 0, 0))\n        canvas.paste(bg, (0, 0))\n        _add_crystalline_highlight(canvas, s)\n        _draw_logo(canvas, s, full_bleed=False)\n        mask = _rounded_mask(s, 0.22)\n        out = Image.new(\"RGBA\", (s, s), (0, 0, 0, 0))\n        out.paste(canvas, (0, 0), mask)\n        imgs.append(out)\n    imgs[0].save(path, format=\"ICO\", sizes=[(s, s) for s in sizes])\n\n\nif __name__ == \"__main__\":\n    make_standard(192, os.path.join(OUT, \"icon-192.png\"))\n    make_standard(512, os.path.join(OUT, \"icon-512.png\"))\n    make_maskable(512, os.path.join(OUT, \"icon-maskable-512.png\"))\n    make_apple(180, os.path.join(OUT, \"apple-touch-icon.png\"))\n    make_favicon(os.path.join(OUT, \"favicon.ico\"))\n    print(\"Generated MidScope Crystalline Pomegranate icons\")\n
+"""Generate PWA icons for MidScope (Crystalline Pomegranate)."""
+from PIL import Image, ImageDraw
+import os
+
+OUT = "/app/frontend/public"
+os.makedirs(OUT, exist_ok=True)
+
+POM_TOP = (169, 61, 79)
+POM_BOT = (92, 17, 28)
+PEARL_CYAN = (180, 235, 242)
+WHITE = (255, 255, 255)
+
+def _vertical_gradient(size, top, bottom):
+    img = Image.new("RGB", (size, size), top)
+    draw = ImageDraw.Draw(img)
+    for y in range(size):
+        t = y / max(1, size - 1)
+        r = int(top[0] * (1 - t) + bottom[0] * t)
+        g = int(top[1] * (1 - t) + bottom[1] * t)
+        b = int(top[2] * (1 - t) + bottom[2] * t)
+        draw.line([(0, y), (size, y)], fill=(r, g, b))
+    return img
+
+def _add_crystalline_highlight(canvas, size):
+    overlay = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    od = ImageDraw.Draw(overlay)
+    od.polygon([(0, 0), (size, 0), (size, int(size * 0.18)), (int(size * 0.6), int(size * 0.45)), (0, int(size * 0.55))], fill=(255, 255, 255, 38))
+    od.polygon([(size, size), (size, int(size * 0.45)), (int(size * 0.55), size)], fill=(PEARL_CYAN[0], PEARL_CYAN[1], PEARL_CYAN[2], 32))
+    canvas.alpha_composite(overlay)
+
+def _rounded_mask(size, radius_ratio=0.22):
+    mask = Image.new("L", (size, size), 0)
+    d = ImageDraw.Draw(mask)
+    r = int(size * radius_ratio)
+    d.rounded_rectangle([(0, 0), (size, size)], radius=r, fill=255)
+    return mask
+
+def _draw_logo(canvas, size, full_bleed=False):
+    draw = ImageDraw.Draw(canvas, "RGBA")
+    margin = int(size * 0.10) if full_bleed else int(size * 0.04)
+    inner = size - 2 * margin
+    cx = size // 2
+    cy = size // 2
+    line_w = max(2, int(inner * 0.085))
+    span = int(inner * 0.78)
+    left = cx - span // 2
+    right = cx + span // 2
+    amp = int(inner * 0.22)
+    p1 = (left, cy)
+    p2 = (cx - amp, cy)
+    p3 = (cx - amp // 2, cy - amp)
+    p4 = (cx, cy + amp)
+    p5 = (cx + amp // 2, cy - int(amp * 1.2))
+    p6 = (cx + amp, cy)
+    p7 = (right, cy)
+    points = [p1, p2, p3, p4, p5, p6, p7]
+    draw.line([(x + 2, y + 3) for (x, y) in points], fill=(0, 0, 0, 90), width=line_w, joint="curve")
+    draw.line(points, fill=WHITE, width=line_w, joint="curve")
+    dot_r = max(3, int(inner * 0.055))
+    draw.ellipse([(p5[0] - dot_r, p5[1] - dot_r), (p5[0] + dot_r, p5[1] + dot_r)], fill=PEARL_CYAN, outline=WHITE, width=max(1, line_w // 4))
+
+def make_standard(size, path):
+    bg = _vertical_gradient(size, POM_TOP, POM_BOT)
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    canvas.paste(bg, (0, 0))
+    _add_crystalline_highlight(canvas, size)
+    _draw_logo(canvas, size, full_bleed=False)
+    mask = _rounded_mask(size, 0.22)
+    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    out.paste(canvas, (0, 0), mask)
+    out.save(path, "PNG", optimize=True)
+
+def make_maskable(size, path):
+    bg = _vertical_gradient(size, POM_TOP, POM_BOT)
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    canvas.paste(bg, (0, 0))
+    _add_crystalline_highlight(canvas, size)
+    _draw_logo(canvas, size, full_bleed=True)
+    canvas.save(path, "PNG", optimize=True)
+
+def make_apple(size, path):
+    bg = _vertical_gradient(size, POM_TOP, POM_BOT)
+    canvas = Image.new("RGB", (size, size), POM_TOP)
+    canvas.paste(bg, (0, 0))
+    rgba = canvas.convert("RGBA")
+    _add_crystalline_highlight(rgba, size)
+    _draw_logo(rgba, size, full_bleed=False)
+    rgba.convert("RGB").save(path, "PNG", optimize=True)
+
+def make_favicon(path):
+    sizes = [16, 32, 48, 64]
+    imgs = []
+    for s in sizes:
+        bg = _vertical_gradient(s, POM_TOP, POM_BOT)
+        canvas = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+        canvas.paste(bg, (0, 0))
+        _add_crystalline_highlight(canvas, s)
+        _draw_logo(canvas, s, full_bleed=False)
+        mask = _rounded_mask(s, 0.22)
+        out = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+        out.paste(canvas, (0, 0), mask)
+        imgs.append(out)
+    imgs[0].save(path, format="ICO", sizes=[(s, s) for s in sizes])
+
+if __name__ == "__main__":
+    make_standard(192, os.path.join(OUT, "icon-192.png"))
+    make_standard(512, os.path.join(OUT, "icon-512.png"))
+    make_maskable(512, os.path.join(OUT, "icon-maskable-512.png"))
+    make_apple(180, os.path.join(OUT, "apple-touch-icon.png"))
+    make_favicon(os.path.join(OUT, "favicon.ico"))
+    print("Generated MidScope Crystalline Pomegranate icons")
