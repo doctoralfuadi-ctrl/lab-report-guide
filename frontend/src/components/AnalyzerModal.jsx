@@ -21,37 +21,23 @@ export default function AnalyzerModal({ kind, T, audience, language, api, plan, 
 
   const handleAnalyze = async () => {
     if (!file) return;
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     const fd = new FormData();
-    fd.append("file", file);
-    fd.append("audience", audience);
-    fd.append("language", language);
+    fd.append("file", file); fd.append("audience", audience); fd.append("language", language);
     try {
-      const res = await axios.post(`${api}/analyze/${kind}`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-        timeout: 120000,
-      });
+      const res = await axios.post(`${api}/analyze/${kind}`, fd, { headers: { "Content-Type": "multipart/form-data" }, timeout: 120000 });
       setResult(res.data);
       try { window.dispatchEvent(new CustomEvent("lab:analysis:success", { detail: { kind } })); } catch (e) {}
-    } catch (e) {
-      setError(e?.response?.data?.detail || T.analyzer.error);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { setError(e?.response?.data?.detail || T.analyzer.error); }
+    finally { setLoading(false); }
   };
 
   const reset = () => { setFile(null); setResult(null); setError(null); };
-
   const download = () => {
     if (!result) return;
     const blob = new Blob([result.interpretation], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `medireader-${result.id}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const a = document.createElement("a"); a.href = url; a.download = `medireader-${result.id}.md`; a.click(); URL.revokeObjectURL(url);
   };
 
   return (
@@ -70,7 +56,7 @@ export default function AnalyzerModal({ kind, T, audience, language, api, plan, 
           <div className="mt-6 flex flex-wrap gap-3 justify-end">
             <Button variant="outline" onClick={onClose} className="rounded-full" data-testid="analyzer-cancel"><X className="w-4 h-4 me-1" /> Cancel</Button>
             <Button onClick={handleAnalyze} disabled={!file || loading} className="rounded-full bg-brand-500 hover:bg-brand-600 text-white px-6 h-11" data-testid="analyzer-submit">
-              {loading ? (<><Loader2 className="w-4 h-4 me-2 animate-spin" /> {T.analyzer.analyzing}</>) : (<><Sparkles className="w-4 h-4 me-2" /> {T.nav.analyze}</>)}
+              {loading ? <><Loader2 className="w-4 h-4 me-2 animate-spin" /> {T.analyzer.analyzing}</> : <><Sparkles className="w-4 h-4 me-2" /> {T.nav.analyze}</>}
             </Button>
           </div>
         </>
