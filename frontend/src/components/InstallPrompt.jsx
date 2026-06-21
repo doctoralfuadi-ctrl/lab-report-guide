@@ -1,106 +1,167 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, X, Smartphone, Monitor, Share } from "lucide-react";
+import { Smartphone, X, Download, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-let deferredPrompt = null;
+const SEEN_FIRST_ANALYSIS = "tahalilek.first_analysis_done";
+const DISMISSED_KEY = "tahalilek.install_prompt_dismissed_at";
+const INSTALLED_KEY = "tahalilek.app_installed";
 
-export default function InstallPrompt({ T, lang = "en" }) {
-  const isAr = lang === "ar";
-  const [showBanner, setShowBanner] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
+// Re-show interval after dismissal: 7 days
+const DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
+const isStandalone = () =>
+  (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+  (typeof navigator !== "undefined" && navigator.standalone === true);
+
+export default function InstallPrompt({ T }) {
+  const C = (T && T.install) || {};
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [hasFirstAnalysis, setHasFirstAnalysis] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [installing, setInstalling] = useState(false);
+
+  // Capture beforeinstallprompt
   useEffect(() => {
-    const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-    setIsStandalone(!!standalone);
-    if (standalone) return;
+    if (isStandalone()) return; // already installed
+    try { if (localStorage.getItem(INSTALLED_KEY) === "1") return; } catch (e) {}
 
-    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    setIsIOS(ios);
-
-    const handler = (e) => { e.preventDefault(); deferredPrompt = e; setShowBanner(true); };
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    const onInstalled = () => {
+      try { localStorage.setItem(INSTALLED_KEY, "1"); } catch (e) {}
+      setDeferredPrompt(null);
+      setVisible(false);
+    };
     window.addEventListener("beforeinstallprompt", handler);
-
-    // On iOS show banner after 5s
-    let timer;
-    if (ios) { timer = setTimeout(() => setShowBanner(true), 5000); }
-
-    return () => { window.removeEventListener("beforeinstallprompt", handler); clearTimeout(timer); };
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
   }, []);
 
-  const handleInstall = useCallback(async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") setShowBanner(false);
-    deferredPrompt = null;
-  }, []);
-
-  const dismiss = () => {
-    setShowBanner(false);
-    try { sessionStorage.setItem("pwa_dismissed", "1"); } catch {}
-  };
-
+  // Listen for first successful analysis
   useEffect(() => {
-    try { if (sessionStorage.getItem("pwa_dismissed")) setShowBanner(false); } catch {}
+    try {
+      if (localStorage.getItem(SEEN_FIRST_ANALYSIS) === "1") setHasFirstAnalysis(true);
+    } catch (e) {}
+    const onSuccess = () => {
+      try { localStorage.setItem(SEEN_FIRST_ANALYSIS, "1"); } catch (e) {}
+      setHasFirstAnalysis(true);
+    };
+    window.addEventListener("lab:analysis:success", onSuccess);
+    return () => window.removeEventListener("lab:analysis:success", onSuccess);
   }, []);
 
-  if (isStandalone || !showBanner) return null;
+  // Decide visibility
+  useEffect(() => {
+    if (!hasFirstAnalysis || !deferredPrompt) return;
+    let dismissedAt = 0;
+    try { dismissedAt = parseInt(localStorage.getItem(DISMISSED_KEY) || "0", 10) || 0; } catch (e) {}
+    if (dismissedAt && Date.now() - dismissedAt < DISMISS_COOLDOWN_MS) return;
+    // Slight delay so it appears after the result modal closes / scroll settles
+    const t = setTimeout(() => setVisible(true), 1200);
+    return () => clearTimeout(t);
+  }, [hasFirstAnalysis, deferredPrompt]);
+
+  const dismiss = useCallback(() => {
+    try { localStorage.setItem(DISMISSED_KEY, String(Date.now())); } catch (e) {}
+    setVisible(false);
+  }, []);
+
+  const install = useCallback(async () => {
+    if (!deferredPrompt) return;
+    setInstalling(true);
+    try {
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice && choice.outcome === "accepted") {
+        try { localStorage.setItem(INSTALLED_KEY, "1"); } catch (e) {}
+        setVisible(false);
+      } else {
+        dismiss();
+      }
+    } catch (e) {
+      dismiss();
+    } finally {
+      setDeferredPrompt(null);
+      setInstalling(false);
+    }
+  }, [deferredPrompt, dismiss]);
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="fixed bottom-4 inset-x-4 z-50 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:max-w-md"
-        data-testid="install-prompt"
-      >
-        <div className="rounded-2xl bg-slate-900/95 backdrop-blur-xl text-white p-5 shadow-2xl shadow-brand-900/30 ring-1 ring-brand-500/20">
-          <button onClick={dismiss} className="absolute top-3 end-3 p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition" data-testid="install-dismiss">
-            <X className="w-4 h-4" />
-          </button>
+      {visible && (
+        <motion.div
+          key="install-prompt"
+          initial={{ opacity: 0, y: 24, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 24, scale: 0.96 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="fixed z-[60] bottom-5 inset-x-4 sm:inset-x-auto sm:end-5 sm:start-auto sm:bottom-6 sm:w-[380px]"
+          data-testid="install-prompt"
+          role="dialog"
+          aria-live="polite"
+        >
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-pomegranate-500 via-pomegranate-600 to-pomegranate-700 text-white shadow-2xl shadow-pomegranate-900/40 ring-1 ring-pomegranate-300/30">
+            {/* Decorative glow */}
+            <div aria-hidden="true" className="absolute -top-10 -end-10 w-32 h-32 rounded-full bg-white/10 blur-2xl" />
+            <div aria-hidden="true" className="absolute -bottom-12 -start-6 w-28 h-28 rounded-full bg-pomegranate-300/15 blur-2xl" />
 
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-brand-500/30">
-              {isIOS ? <Smartphone className="w-6 h-6 text-white" /> : <Monitor className="w-6 h-6 text-white" />}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-display font-bold text-base leading-tight">
-                {isAr ? "\u062b\u0628\u0651\u062a MidScope \u0639\u0644\u0649 \u062c\u0647\u0627\u0632\u0643" : "Install MidScope"}
-              </h4>
-              <p className="text-sm text-slate-300 mt-1 leading-snug">
-                {isAr
-                  ? "\u0627\u062d\u0635\u0644 \u0639\u0644\u0649 \u0648\u0635\u0648\u0644 \u0641\u0648\u0631\u064a \u0645\u0646 \u0634\u0627\u0634\u062a\u0643 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629 \u2014 \u0628\u062f\u0648\u0646 \u0645\u062a\u062c\u0631."
-                  : "Get instant access from your home screen \u2014 no app store needed."}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center gap-3">
-            {isIOS ? (
-              <div className="flex items-center gap-2 text-sm text-slate-300">
-                <Share className="w-4 h-4" />
-                <span>{isAr ? "\u0627\u0636\u063a\u0637 \u0645\u0634\u0627\u0631\u0643\u0629 \u062b\u0645 \u0623\u0636\u0641 \u0644\u0644\u0634\u0627\u0634\u0629 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629" : "Tap Share then \u2018Add to Home Screen\u2019"}</span>
-              </div>
-            ) : (
-              <Button
-                onClick={handleInstall}
-                className="rounded-full bg-brand-500 hover:bg-brand-400 text-white px-5 h-10 text-sm font-semibold shadow-lg shadow-brand-500/30"
-                data-testid="install-btn"
-              >
-                <Download className="w-4 h-4 me-2" />
-                {isAr ? "\u062b\u0628\u0651\u062a \u0627\u0644\u0622\u0646" : "Install Now"}
-              </Button>
-            )}
-            <button onClick={dismiss} className="text-sm text-slate-400 hover:text-white transition" data-testid="install-later">
-              {isAr ? "\u0644\u0627\u062d\u0642\u0627\u064b" : "Later"}
+            <button
+              onClick={dismiss}
+              aria-label={C.dismiss || "Dismiss"}
+              className="absolute top-2.5 end-2.5 w-8 h-8 rounded-full flex items-center justify-center text-pomegranate-100 hover:text-white hover:bg-white/15 transition"
+              data-testid="install-prompt-dismiss"
+            >
+              <X className="w-4 h-4" />
             </button>
+
+            <div className="relative p-5 pe-12">
+              <div className="flex items-start gap-3.5">
+                <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center ring-1 ring-white/20">
+                  <Smartphone className="w-5 h-5 text-white" strokeWidth={2.2} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-pomegranate-100/90">
+                    <Sparkles className="w-3 h-3" />
+                    <span>{C.eyebrow || "New"}</span>
+                  </div>
+                  <h3 className="mt-1 font-display font-extrabold text-lg leading-snug tracking-tight" data-testid="install-prompt-title">
+                    {C.title || "Install the app"}
+                  </h3>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-pomegranate-50/95" data-testid="install-prompt-body">
+                    {C.body || "Get instant access from your home screen. Faster, offline-ready, and no browser bar."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center gap-2">
+                <Button
+                  onClick={install}
+                  disabled={installing}
+                  className="flex-1 h-10 rounded-full bg-white text-pomegranate-700 hover:bg-pomegranate-50 hover:text-pomegranate-800 font-semibold tracking-tight transition disabled:opacity-70"
+                  data-testid="install-prompt-install"
+                >
+                  <Download className="w-4 h-4 me-2" strokeWidth={2.5} />
+                  {installing ? (C.installing || "Installing…") : (C.cta || "Install app")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={dismiss}
+                  className="h-10 rounded-full px-4 text-pomegranate-100 hover:text-white hover:bg-white/10 text-xs font-medium"
+                  data-testid="install-prompt-later"
+                >
+                  {C.later || "Later"}
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
     </AnimatePresence>
   );
 }
