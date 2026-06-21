@@ -28,14 +28,16 @@ function schedulePersist() {
   setTimeout(() => { saveCache(cache); savePending = false; }, 300);
 }
 
+// Heuristic: should we even attempt to translate this string?
+// Skip URLs, pure numbers/punctuation, and very long blobs (split or pass through).
 function shouldTranslate(text) {
   if (typeof text !== "string") return false;
   const trimmed = text.trim();
   if (trimmed.length === 0) return false;
   if (/^https?:\/\//i.test(trimmed)) return false;
-  if (/^[\d\s\W_]+$/.test(trimmed)) return false;
-  if (/^[\d.,\s$£€¥%]+$/.test(trimmed)) return false;
-  if (trimmed.length > MAX_CHARS) return false;
+  if (/^[\d\s\W_]+$/.test(trimmed)) return false;          // numbers/punct only
+  if (/^[\d.,\s$£€¥%]+$/.test(trimmed)) return false;       // currency
+  if (trimmed.length > MAX_CHARS) return false;             // too long for MyMemory
   return true;
 }
 
@@ -53,6 +55,7 @@ async function translateOne(text, targetLang) {
     const data = await res.json();
     const translated = data?.responseData?.translatedText;
     if (typeof translated === "string" && translated.length > 0 && !translated.startsWith("MYMEMORY WARNING")) {
+      // MyMemory sometimes returns the source text with .toUpperCase() on quota
       const looksGood = translated.toLowerCase() !== text.toLowerCase() || tgt === "en";
       const out = looksGood ? translated : text;
       cache[key] = out;
@@ -65,9 +68,15 @@ async function translateOne(text, targetLang) {
   }
 }
 
+/**
+ * Recursively translate every string-leaf in `obj`, preserving structure.
+ * Keys starting with "_" (e.g. _locale, _voiceLocale) are passed through unchanged.
+ * Calls onProgress(done, total) as work completes.
+ */
 export async function translateObject(obj, targetLang, onProgress) {
   if (targetLang === "en") return obj;
 
+  // 1) Walk the object, collect all (path, text) pairs
   const queue = [];
   function walk(node, path) {
     if (typeof node === "string") {
@@ -76,7 +85,7 @@ export async function translateObject(obj, targetLang, onProgress) {
       node.forEach((v, i) => walk(v, [...path, i]));
     } else if (node && typeof node === "object") {
       for (const k of Object.keys(node)) {
-        if (k.startsWith("_")) continue;
+        if (k.startsWith("_")) continue;     // skip metadata keys
         walk(node[k], [...path, k]);
       }
     }
@@ -87,6 +96,7 @@ export async function translateObject(obj, targetLang, onProgress) {
   let done = 0;
   const results = new Array(total);
 
+  // 2) Translate with bounded concurrency
   async function worker(startIdx) {
     for (let i = startIdx; i < total; i += CONCURRENCY) {
       const item = queue[i];
@@ -97,6 +107,7 @@ export async function translateObject(obj, targetLang, onProgress) {
   }
   await Promise.all(Array.from({ length: CONCURRENCY }, (_, i) => worker(i)));
 
+  // 3) Reconstruct: deep-clone obj and set translated values at each path
   const out = JSON.parse(JSON.stringify(obj));
   for (let i = 0; i < total; i += 1) {
     const { path } = queue[i];
