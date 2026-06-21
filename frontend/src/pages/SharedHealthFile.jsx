@@ -42,48 +42,23 @@ export default function SharedHealthFile() {
           </div>
         </div>
         <hr className="accent-line-thin" />
-        {loading && <div className="flex items-center gap-2 text-slate-500"><Loader2 className="w-5 h-5 animate-spin" /> Loading…</div>}
-        {error && (
-          <div className="rounded-2xl bg-rose-50 border border-rose-200 p-5 flex items-start gap-3 text-rose-800" data-testid="shared-error">
-            <AlertTriangle className="w-5 h-5 mt-0.5" /> <span>{error}</span>
-          </div>
-        )}
+        {loading && <div className="flex items-center gap-2 text-slate-500"><Loader2 className="w-5 h-5 animate-spin" /> Loading...</div>}
+        {error && (<div className="rounded-2xl bg-rose-50 border border-rose-200 p-5 flex items-start gap-3 text-rose-800" data-testid="shared-error"><AlertTriangle className="w-5 h-5 mt-0.5" /> <span>{error}</span></div>)}
         {data && (
           <div className="space-y-5" data-testid="shared-labels">
             {(!data.labels || data.labels.length === 0) && <p className="text-slate-500">No entries shared.</p>}
             {data.labels?.map((l) => (
               <div key={l.label} className="rounded-3xl border border-brand-100 bg-white p-6 shadow-sm" data-testid={`shared-label-${l.label}`}>
                 <div className="flex items-end justify-between flex-wrap gap-3 mb-3">
-                  <div>
-                    <div className="font-display font-bold text-lg text-slate-900">{l.label}</div>
-                    <div className="text-[11px] text-slate-500">{l.count} entries {l.unit ? `· ${l.unit}` : ""}</div>
-                  </div>
-                  {l.latest && (
-                    <div className="text-end">
-                      <div className="text-[10px] text-slate-500 uppercase tracking-wider">Latest</div>
-                      <div className="font-display font-bold text-xl text-slate-900">{l.latest.value} <span className="text-xs text-slate-500">{l.unit || ""}</span></div>
-                    </div>
-                  )}
+                  <div><div className="font-display font-bold text-lg text-slate-900">{l.label}</div><div className="text-[11px] text-slate-500">{l.count} entries {l.unit ? `· ${l.unit}` : ""}</div></div>
+                  {l.latest && (<div className="text-end"><div className="text-[10px] text-slate-500 uppercase tracking-wider">Latest</div><div className="font-display font-bold text-xl text-slate-900">{l.latest.value} <span className="text-xs text-slate-500">{l.unit || ""}</span></div></div>)}
                 </div>
-                <table className="w-full text-sm">
-                  <thead><tr className="text-start text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-brand-100"><th className="text-start py-2">Date</th><th className="text-start py-2">Value</th><th className="text-start py-2">Ref Range</th></tr></thead>
-                  <tbody>
-                    {l.series.slice().reverse().map((s, i) => (
-                      <tr key={i} className="border-b border-brand-50 last:border-0">
-                        <td className="py-2 text-slate-600">{s.date}</td>
-                        <td className="py-2 font-semibold text-slate-900">{s.value} {l.unit || ""}</td>
-                        <td className="py-2 text-slate-500 text-xs">{s.refLow ?? ""}{s.refHigh != null ? ` – ${s.refHigh}` : ""}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <table className="w-full text-sm"><thead><tr className="text-start text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-brand-100"><th className="text-start py-2">Date</th><th className="text-start py-2">Value</th><th className="text-start py-2">Ref Range</th></tr></thead><tbody>{l.series.slice().reverse().map((s, i) => (<tr key={i} className="border-b border-brand-50 last:border-0"><td className="py-2 text-slate-600">{s.date}</td><td className="py-2 font-semibold text-slate-900">{s.value} {l.unit || ""}</td><td className="py-2 text-slate-500 text-xs">{s.refLow ?? ""}{s.refHigh != null ? ` – ${s.refHigh}` : ""}</td></tr>))}</tbody></table>
               </div>
             ))}
           </div>
         )}
-        <p className="mt-12 text-[11px] text-slate-500 text-center">
-          This view is read-only and was shared by the patient. Not a substitute for clinical evaluation.
-        </p>
+        <p className="mt-12 text-[11px] text-slate-500 text-center">This view is read-only and was shared by the patient. Not a substitute for clinical evaluation.</p>
       </div>
     </div>
   );
