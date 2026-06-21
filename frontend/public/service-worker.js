@@ -1,4 +1,14 @@
 /* eslint-disable no-restricted-globals */
+/**
+ * MidScope — Service Worker
+ *
+ * Strategy:
+ *  - Pre-cache the app shell (offline-ready landing).
+ *  - Network-first for `/api/*` calls (always fresh medical data; falls back to cache).
+ *  - Stale-while-revalidate for static assets (JS/CSS/fonts/images).
+ *  - HTML navigations: network-first, fall back to cached shell when offline.
+ */
+
 const CACHE_VERSION = "v1.2.0-pomegranate";
 const APP_SHELL_CACHE = `app-shell-${CACHE_VERSION}`;
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
@@ -38,14 +48,18 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
+  // Don't intercept cross-origin opaque requests for Google Fonts CSS but cache the WOFF2 files
+  // Skip Emergent platform scripts so they always stay fresh
   if (url.origin === "https://assets.emergent.sh") return;
 
+  // API: network-first
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(
       fetch(request)
         .then((res) => {
           const copy = res.clone();
           caches.open(API_CACHE).then((cache) => {
+            // Only cache successful GETs, and only small responses
             if (res.ok) cache.put(request, copy).catch(() => {});
           });
           return res;
@@ -55,6 +69,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // HTML navigations: network-first, fallback to shell
   if (request.mode === "navigate" || (request.headers.get("accept") || "").includes("text/html")) {
     event.respondWith(
       fetch(request)
@@ -68,6 +83,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Static assets: stale-while-revalidate
   event.respondWith(
     caches.match(request).then((cached) => {
       const fetchPromise = fetch(request)
