@@ -1,12 +1,18 @@
+// Minimal markdown renderer for AI interpretation responses.
+// Supports: headings (##, ###), bold (**), inline code (`x`), unordered lists, ordered lists, paragraphs.
 function escapeHtml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+// Splits a full markdown interpretation into:
+//   main: everything except the diet / exercise / recommendations sections
+//   recommendations: only the diet + exercise + recommendations sections
+// Detection is multi-language (Arabic + English keywords).
 export function splitInterpretation(md) {
   if (!md) return { main: "", recommendations: "" };
   const lines = md.split(/\r?\n/);
   const headerRe = /^(##\s+)(.+)$/;
-  const recHeaderRe = /(diet|food|nutrition|exercise|physical|activity|lifestyle|recommendation|recommendations)/i;
+  const recHeaderRe = /(diet|food|nutrition|exercise|physical|activity|lifestyle|recommendation|recommendations|تغذية|طعام|أطعمة|غذاء|حمية|رياضة|نشاط|تمارين|توصيات)/i;
 
   const main = [];
   const recs = [];
@@ -15,6 +21,7 @@ export function splitInterpretation(md) {
   for (const raw of lines) {
     const m = raw.match(headerRe);
     if (m) {
+      // A new ## heading — pick bucket based on its title
       bucket = recHeaderRe.test(m[2]) ? recs : main;
     }
     bucket.push(raw);
@@ -35,10 +42,10 @@ export function renderMarkdown(md) {
 
   const sectionClass = (title) => {
     const t = title.toLowerCase();
-    if (/(diet|food|nutrition)/i.test(t)) return "md-diet";
-    if (/(exercise|physical|activity|lifestyle|workout)/i.test(t)) return "md-exercise";
-    if (/(recommendation|recommendations)/i.test(t)) return "md-recs";
-    if (/(disclaimer)/i.test(t)) return "md-disclaimer";
+    if (/(diet|food|nutrition|تغذية|طعام|أطعمة|غذاء|حمية)/i.test(t)) return "md-diet";
+    if (/(exercise|physical|activity|lifestyle|workout|رياضة|نشاط|تمارين|أنشطة)/i.test(t)) return "md-exercise";
+    if (/(recommendation|recommendations|توصيات)/i.test(t)) return "md-recs";
+    if (/(disclaimer|تنبيه)/i.test(t)) return "md-disclaimer";
     return "";
   };
 
