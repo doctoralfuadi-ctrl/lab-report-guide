@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Sparkles, Beaker, Check, X, ChevronDown, ChevronUp } from "lucide-react";
 
 /**
- * Demo Tier Switcher — visible only when the owner master-bypass is active.
+ * Demo Tier Switcher \u2014 visible only when the owner master-bypass is active.
  * Lets Dr. Anmar (or any reviewer holding the master key) instantly jump between
  * Standard / Premium / Royal as if subscribed, with no checkout flow.
  *
@@ -13,7 +13,7 @@ export default function DemoTierSwitcher({ plan, setPlan, lang = "en", onClose }
   const isAr = lang === "ar";
   const [open, setOpen] = useState(true);
 
-  // Sync from URL ?plan=… on first mount
+  // Sync from URL ?plan=... on first mount
   useEffect(() => {
     try {
       const url = new URL(window.location.href);
@@ -28,8 +28,8 @@ export default function DemoTierSwitcher({ plan, setPlan, lang = "en", onClose }
   const tiers = [
     {
       key: "standard",
-      labelEn: "Standard",   labelAr: "الأساسية",
-      priceEn: "$10 / year", priceAr: "10$ / سنة",
+      labelEn: "Standard",   labelAr: "\u0627\u0644\u0623\u0633\u0627\u0633\u064a\u0629",
+      priceEn: "$10 / year", priceAr: "10$ / \u0633\u0646\u0629",
       Icon: Beaker,
       accent: "from-teal-400 to-teal-600",
       ring:   "ring-teal-300",
@@ -37,8 +37,8 @@ export default function DemoTierSwitcher({ plan, setPlan, lang = "en", onClose }
     },
     {
       key: "premium",
-      labelEn: "Premium",    labelAr: "بريميوم",
-      priceEn: "$25 / year", priceAr: "25$ / سنة",
+      labelEn: "Premium",    labelAr: "\u0628\u0631\u064a\u0645\u064a\u0648\u0645",
+      priceEn: "$25 / year", priceAr: "25$ / \u0633\u0646\u0629",
       Icon: Sparkles,
       accent: "from-amber-400 to-amber-600",
       ring:   "ring-amber-300",
@@ -46,8 +46,8 @@ export default function DemoTierSwitcher({ plan, setPlan, lang = "en", onClose }
     },
     {
       key: "royal",
-      labelEn: "Royal",      labelAr: "الملكية",
-      priceEn: "$100 / year",priceAr: "100$ / سنة",
+      labelEn: "Royal",      labelAr: "\u0627\u0644\u0645\u0644\u0643\u064a\u0629",
+      priceEn: "$100 / year",priceAr: "100$ / \u0633\u0646\u0629",
       Icon: Crown,
       accent: "from-cyan-500 to-cyan-700",
       ring:   "ring-cyan-300",
@@ -75,10 +75,10 @@ export default function DemoTierSwitcher({ plan, setPlan, lang = "en", onClose }
           </div>
           <div className="flex-1 text-start">
             <div className="text-[10px] font-bold tracking-widest uppercase text-cyan-300">
-              {isAr ? "وضع تجربة المالك" : "Owner Demo Mode"}
+              {isAr ? "\u0648\u0636\u0639 \u062a\u062c\u0631\u0628\u0629 \u0627\u0644\u0645\u0627\u0644\u0643" : "Owner Demo Mode"}
             </div>
             <div className="text-sm font-display font-bold">
-              {isAr ? "جرّب أيّ باقة بدون دفع" : "Try any tier — no payment"}
+              {isAr ? "\u062c\u0631\u0651\u0628 \u0623\u064a\u0651 \u0628\u0627\u0642\u0629 \u0628\u062f\u0648\u0646 \u062f\u0641\u0639" : "Try any tier \u2014 no payment"}
             </div>
           </div>
           {open ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronUp className="w-4 h-4 text-slate-400" />}
@@ -138,8 +138,8 @@ export default function DemoTierSwitcher({ plan, setPlan, lang = "en", onClose }
                 })}
                 <div className="text-[10px] text-slate-400 px-1 pt-1 leading-relaxed">
                   {isAr
-                    ? "اضغط أيّ باقة — كل المزايا تنفتح فوراً بدون فحص دفع."
-                    : "Tap any tier — features unlock instantly, no payment check."}
+                    ? "\u0627\u0636\u063a\u0637 \u0623\u064a\u0651 \u0628\u0627\u0642\u0629 \u2014 \u0643\u0644 \u0627\u0644\u0645\u0632\u0627\u064a\u0627 \u062a\u0646\u0641\u062a\u062d \u0641\u0648\u0631\u0627\u064b \u0628\u062f\u0648\u0646 \u0641\u062d\u0635 \u062f\u0641\u0639."
+                    : "Tap any tier \u2014 features unlock instantly, no payment check."}
                 </div>
               </div>
             </motion.div>
