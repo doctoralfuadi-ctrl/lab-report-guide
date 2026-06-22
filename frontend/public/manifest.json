@@ -1,7 +1,7 @@
 {
-  "name": "MidScope \u2014 AI Diagnostics",
+  "name": "MidScope — AI Diagnostics",
   "short_name": "MidScope",
-  "description": "MidScope \u2014 AI-powered diagnostics: lab reports, radiology & sonar, and ECG interpretation. Doctor-grade clinical insights in 70+ languages.",
+  "description": "MidScope — AI-powered diagnostics: lab reports, radiology & sonar, and ECG interpretation. Doctor-grade clinical insights in 70+ languages.",
   "lang": "en",
   "scope": "/",
   "start_url": "/?source=pwa&v=2",
