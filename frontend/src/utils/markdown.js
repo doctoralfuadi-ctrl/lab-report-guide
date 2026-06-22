@@ -12,7 +12,7 @@ export function splitInterpretation(md) {
   if (!md) return { main: "", recommendations: "" };
   const lines = md.split(/\r?\n/);
   const headerRe = /^(##\s+)(.+)$/;
-  const recHeaderRe = /(diet|food|nutrition|exercise|physical|activity|lifestyle|recommendation|recommendations|تغذية|طعام|أطعمة|غذاء|حمية|رياضة|نشاط|تمارين|توصيات)/i;
+  const recHeaderRe = /(diet|food|nutrition|exercise|physical|activity|lifestyle|recommendation|recommendations|\u062a\u063a\u0630\u064a\u0629|\u0637\u0639\u0627\u0645|\u0623\u0637\u0639\u0645\u0629|\u063a\u0630\u0627\u0621|\u062d\u0645\u064a\u0629|\u0631\u064a\u0627\u0636\u0629|\u0646\u0634\u0627\u0637|\u062a\u0645\u0627\u0631\u064a\u0646|\u062a\u0648\u0635\u064a\u0627\u062a)/i;
 
   const main = [];
   const recs = [];
@@ -21,7 +21,7 @@ export function splitInterpretation(md) {
   for (const raw of lines) {
     const m = raw.match(headerRe);
     if (m) {
-      // A new ## heading — pick bucket based on its title
+      // A new ## heading \u2014 pick bucket based on its title
       bucket = recHeaderRe.test(m[2]) ? recs : main;
     }
     bucket.push(raw);
@@ -42,10 +42,10 @@ export function renderMarkdown(md) {
 
   const sectionClass = (title) => {
     const t = title.toLowerCase();
-    if (/(diet|food|nutrition|تغذية|طعام|أطعمة|غذاء|حمية)/i.test(t)) return "md-diet";
-    if (/(exercise|physical|activity|lifestyle|workout|رياضة|نشاط|تمارين|أنشطة)/i.test(t)) return "md-exercise";
-    if (/(recommendation|recommendations|توصيات)/i.test(t)) return "md-recs";
-    if (/(disclaimer|تنبيه)/i.test(t)) return "md-disclaimer";
+    if (/(diet|food|nutrition|\u062a\u063a\u0630\u064a\u0629|\u0637\u0639\u0627\u0645|\u0623\u0637\u0639\u0645\u0629|\u063a\u0630\u0627\u0621|\u062d\u0645\u064a\u0629)/i.test(t)) return "md-diet";
+    if (/(exercise|physical|activity|lifestyle|workout|\u0631\u064a\u0627\u0636\u0629|\u0646\u0634\u0627\u0637|\u062a\u0645\u0627\u0631\u064a\u0646|\u0623\u0646\u0634\u0637\u0629)/i.test(t)) return "md-exercise";
+    if (/(recommendation|recommendations|\u062a\u0648\u0635\u064a\u0627\u062a)/i.test(t)) return "md-recs";
+    if (/(disclaimer|\u062a\u0646\u0628\u064a\u0647)/i.test(t)) return "md-disclaimer";
     return "";
   };
 
