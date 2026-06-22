@@ -37,13 +37,13 @@ export default function SharedHealthFile() {
             <MidScopeIcon className="w-7 h-7" color="white" strokeWidth={2.2} />
           </div>
           <div>
-            <div className="font-display font-extrabold text-2xl">MidScope \u2014 Shared Health File</div>
+            <div className="font-display font-extrabold text-2xl">MidScope — Shared Health File</div>
             {data?.expiresAt && <div className="text-xs text-slate-500">Valid until {fmtDate(data.expiresAt)}</div>}
           </div>
         </div>
         <hr className="accent-line-thin" />
 
-        {loading && <div className="flex items-center gap-2 text-slate-500"><Loader2 className="w-5 h-5 animate-spin" /> Loading\u2026</div>}
+        {loading && <div className="flex items-center gap-2 text-slate-500"><Loader2 className="w-5 h-5 animate-spin" /> Loading…</div>}
         {error && (
           <div className="rounded-2xl bg-rose-50 border border-rose-200 p-5 flex items-start gap-3 text-rose-800" data-testid="shared-error">
             <AlertTriangle className="w-5 h-5 mt-0.5" /> <span>{error}</span>
@@ -57,7 +57,7 @@ export default function SharedHealthFile() {
                 <div className="flex items-end justify-between flex-wrap gap-3 mb-3">
                   <div>
                     <div className="font-display font-bold text-lg text-slate-900">{l.label}</div>
-                    <div className="text-[11px] text-slate-500">{l.count} entries {l.unit ? `\u00b7 ${l.unit}` : ""}</div>
+                    <div className="text-[11px] text-slate-500">{l.count} entries {l.unit ? `· ${l.unit}` : ""}</div>
                   </div>
                   {l.latest && (
                     <div className="text-end">
@@ -79,7 +79,7 @@ export default function SharedHealthFile() {
                       <tr key={i} className="border-b border-brand-50 last:border-0">
                         <td className="py-2 text-slate-600">{s.date}</td>
                         <td className="py-2 font-semibold text-slate-900">{s.value} {l.unit || ""}</td>
-                        <td className="py-2 text-slate-500 text-xs">{s.refLow ?? ""}{s.refHigh != null ? ` \u2013 ${s.refHigh}` : ""}</td>
+                        <td className="py-2 text-slate-500 text-xs">{s.refLow ?? ""}{s.refHigh != null ? ` – ${s.refHigh}` : ""}</td>
                       </tr>
                     ))}
                   </tbody>

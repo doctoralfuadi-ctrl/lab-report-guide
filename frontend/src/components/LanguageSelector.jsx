@@ -6,7 +6,7 @@ import {
 import { LANGUAGES, LANGUAGE_GROUPS, LANG_BY_CODE } from "../data/languages";
 
 /**
- * Crystalline language selector \u2014 glass-morphism dropdown with 70+ languages.
+ * Crystalline language selector — glass-morphism dropdown with 70+ languages.
  * Drops in next to the brand CTA in the header. Shows native script labels.
  */
 export default function LanguageSelector({ value, onChange, loading, progress }) {
@@ -70,7 +70,7 @@ export default function LanguageSelector({ value, onChange, loading, progress })
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search 70+ languages\u2026"
+              placeholder="Search 70+ languages…"
               className="w-full h-9 rounded-full bg-slate-50 ps-9 pe-3 text-sm border border-transparent focus:border-brand-300 focus:bg-white focus:outline-none transition"
               data-testid="language-selector-search"
             />
@@ -117,7 +117,7 @@ export default function LanguageSelector({ value, onChange, loading, progress })
         {loading && (
           <div className="border-t border-brand-50 bg-brand-50/50 px-4 py-2.5 flex items-center gap-2 text-xs text-brand-800">
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            <span>Translating UI\u2026 {progress?.done}/{progress?.total}</span>
+            <span>Translating UI… {progress?.done}/{progress?.total}</span>
           </div>
         )}
       </DropdownMenuContent>
