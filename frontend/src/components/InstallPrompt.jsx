@@ -147,7 +147,7 @@ export default function InstallPrompt({ T }) {
                   data-testid="install-prompt-install"
                 >
                   <Download className="w-4 h-4 me-2" strokeWidth={2.5} />
-                  {installing ? (C.installing || "Installing…") : (C.cta || "Install app")}
+                  {installing ? (C.installing || "Installing\u2026") : (C.cta || "Install app")}
                 </Button>
                 <Button
                   variant="ghost"
