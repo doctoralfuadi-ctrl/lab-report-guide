@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 /**
- * MidScope — Service Worker
+ * MidScope \u2014 Service Worker
  *
  * Strategy:
  *  - Pre-cache the app shell (offline-ready landing).
