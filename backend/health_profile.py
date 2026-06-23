@@ -1,15 +1,15 @@
 """
-MidScope — Smart Health Profile (3-Layer Architecture)
+MidScope \u2014 Smart Health Profile (3-Layer Architecture)
 
-LAYER 1 — Permanent (stored once, rarely changes):
+LAYER 1 \u2014 Permanent (stored once, rarely changes):
     name, date_of_birth, sex, height_cm, blood_group, allergies,
     chronic_diseases, surgical_history, family_history
 
-LAYER 2 — Semi-permanent (updated periodically):
+LAYER 2 \u2014 Semi-permanent (updated periodically):
     weight_kg, smoking_status, exercise_habits, baseline_bp_systolic,
     baseline_bp_diastolic, long_term_medications, supplements
 
-LAYER 3 — Dynamic clinical context (re-collected per submission):
+LAYER 3 \u2014 Dynamic clinical context (re-collected per submission):
     pregnancy_status, pregnancy_week, lactation, acute_infection_or_fever,
     recent_medications, recent_surgeries, fasting_status, reason_for_test,
     current_symptoms
