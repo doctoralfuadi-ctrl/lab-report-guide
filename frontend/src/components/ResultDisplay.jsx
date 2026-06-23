@@ -4,6 +4,7 @@ import { Salad, Dumbbell, ChevronDown, ChevronUp, HeartPulse, Volume2, Pause, Cr
 import { Button } from "@/components/ui/button";
 import { renderMarkdown, splitInterpretation } from "../utils/markdown";
 
+// Strips Markdown to clean text for TTS reading
 function stripMarkdown(md) {
   if (!md) return "";
   return md
@@ -36,6 +37,7 @@ function pickProfessionalVoice(voiceLocale) {
     if (isArabic && msaCodes.includes(lc)) score += 80;
     if (isArabic && dialectCodes.some(d => lc.startsWith(d))) score -= 50;
     if (lc.startsWith(langPrefix)) score += 30;
+    // Prefer "natural" / professional sounding voices
     if (/neural|natural|google|microsoft/i.test(v.name)) score += 10;
     return { v, score };
   }).sort((a, b) => b.score - a.score);
@@ -45,12 +47,13 @@ function pickProfessionalVoice(voiceLocale) {
 export default function ResultDisplay({ interpretation, T, plan, onRequestUpgrade }) {
   const { main, recommendations } = useMemo(() => splitInterpretation(interpretation || ""), [interpretation]);
   const [open, setOpen] = useState(false);
-  const [voiceState, setVoiceState] = useState("idle");
+  const [voiceState, setVoiceState] = useState("idle"); // idle | playing | paused
   const hasRecs = recommendations.length > 20;
   const isPremium = plan === "premium";
   const voiceLocale = T._voiceLocale || "en-US";
   const utteranceRef = useRef(null);
 
+  // Clean up speech on unmount
   useEffect(() => () => { try { window.speechSynthesis?.cancel(); } catch (e) {} }, []);
 
   const startReading = () => {
@@ -91,6 +94,7 @@ export default function ResultDisplay({ interpretation, T, plan, onRequestUpgrad
         data-testid="result-main"
       />
 
+      {/* Premium-only Voice Interpretation control */}
       <div className="mt-4">
         {voiceState === "idle" ? (
           <Button
@@ -130,7 +134,7 @@ export default function ResultDisplay({ interpretation, T, plan, onRequestUpgrad
             </div>
             <div className="flex-1 leading-tight">
               <div className="font-display font-bold text-sm">{T.analyzer.voicePlaying}</div>
-              <div className="text-[11px] text-white/80 mt-0.5">{voiceLocale.startsWith("ar") ? "صوت فصيح احترافي" : T.analyzer.voiceLabel}</div>
+              <div className="text-[11px] text-white/80 mt-0.5">{voiceLocale.startsWith("ar") ? "\u0635\u0648\u062a \u0641\u0635\u064a\u062d \u0627\u062d\u062a\u0631\u0627\u0641\u064a" : T.analyzer.voiceLabel}</div>
             </div>
             <Button onClick={togglePause} className="rounded-full bg-white/20 hover:bg-white/30 text-white h-9 px-3" data-testid="voice-toggle-pause">
               {voiceState === "paused" ? <Volume2 className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
@@ -142,6 +146,7 @@ export default function ResultDisplay({ interpretation, T, plan, onRequestUpgrad
         )}
       </div>
 
+      {/* Prominent "Health Recommendations" button */}
       <Button
         onClick={() => setOpen(o => !o)}
         disabled={!hasRecs}

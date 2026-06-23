@@ -16,7 +16,7 @@ const MODULES = [
     status: "live",
     theme: "turquoise",
     targetAction: "openAnalyzer",
-    tierGate: null,
+    tierGate: null,            // available on all tiers
   },
   {
     key: "radiology",
@@ -24,7 +24,7 @@ const MODULES = [
     status: "live",
     theme: "cacao",
     targetAction: "openAnalyzer",
-    tierGate: "premium",
+    tierGate: "premium",       // Premium + Royal can use
   },
   {
     key: "ecg",
@@ -32,7 +32,7 @@ const MODULES = [
     status: "live",
     theme: "pomegranate",
     targetAction: "openAnalyzer",
-    tierGate: "royal",
+    tierGate: "royal",         // Royal exclusive
   },
 ];
 
@@ -48,6 +48,7 @@ export default function DiagnosticModules({ T, lang, onOpenLab, onOpenRadiology,
       <div aria-hidden="true" className="ambient-cyan" style={{ bottom: "-10%", insetInlineEnd: "-10%" }} />
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-10">
+        {/* Header */}
         <div className="text-center mb-12 lg:mb-14">
           <div className="inline-flex items-center gap-2 px-3.5 h-7 rounded-full bg-pomegranate-50 text-pomegranate-700 text-[10px] font-bold tracking-widest uppercase border border-pomegranate-200">
             <Sparkles className="w-3 h-3" /> {M.eyebrow}
@@ -60,6 +61,7 @@ export default function DiagnosticModules({ T, lang, onOpenLab, onOpenRadiology,
           </p>
         </div>
 
+        {/* 3 module cards */}
         <div className="grid lg:grid-cols-3 gap-5 lg:gap-6" data-testid="modules-grid">
           {MODULES.map((mod, idx) => (
             <ModuleCard
@@ -135,8 +137,10 @@ function ModuleCard({ T, lang, isAr, mod, M, index, onOpen }) {
       data-testid={`module-card-${key}`}
     >
       <div className={`relative h-full ${t.cardBase} p-7 ring-1 ${t.ring} ${t.hoverRing} transition-all duration-500 hover:-translate-y-1`}>
+        {/* glow on hover */}
         <span aria-hidden="true" className={`opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${t.glow}`} />
 
+        {/* Status badge */}
         <div className="relative flex items-start justify-between mb-5">
           <div className={`flex items-center justify-center w-14 h-14 rounded-2xl ${t.iconBg} shadow-lg`}>
             <Icon className="w-7 h-7 text-white" strokeWidth={2} />
@@ -177,7 +181,7 @@ function ModuleCard({ T, lang, isAr, mod, M, index, onOpen }) {
 
 function NotifyForm({ M, moduleKey, themeKey, t }) {
   const [email, setEmail] = useState("");
-  const [state, setState] = useState("idle");
+  const [state, setState] = useState("idle"); // idle | submitting | done
   const [open, setOpen] = useState(false);
 
   const submit = async (e) => {
@@ -191,6 +195,7 @@ function NotifyForm({ M, moduleKey, themeKey, t }) {
       await axios.post(`${API}/newsletter`, { email, source: `module:${moduleKey}` });
       setState("done");
     } catch (err) {
+      // Newsletter endpoint may not exist; fall back to silent success so users aren't blocked
       setState("done");
     }
   };
